@@ -19,14 +19,19 @@ public partial class DocumentScanner
         !unsupportedReported
         && GoogleApiAvailability.Instance.IsGooglePlayServicesAvailable(Platform.AppContext) == ConnectionResult.Success;
 
-    public async Task<IReadOnlyList<string>> ScanAsync()
+    public Task<IReadOnlyList<string>> ScanAsync() => LaunchAsync(galleryImport: false);
+
+    // Same scanner UI plus an import-from-gallery button
+    public Task<IReadOnlyList<string>> ScanFromPhotosAsync() => LaunchAsync(galleryImport: true);
+
+    async Task<IReadOnlyList<string>> LaunchAsync(bool galleryImport)
     {
         var activity = Platform.CurrentActivity
             ?? throw new InvalidOperationException("No current activity.");
 
         var options = new GmsDocumentScannerOptions.Builder()
             .SetPageLimit(5)
-            .SetGalleryImportAllowed(false)
+            .SetGalleryImportAllowed(galleryImport)
             .SetScannerMode(GmsDocumentScannerOptions.ScannerModeFull)
             .SetResultFormats(GmsDocumentScannerOptions.ResultFormatJpeg, [GmsDocumentScannerOptions.ResultFormatPdf])
             .Build();

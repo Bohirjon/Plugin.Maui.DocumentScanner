@@ -8,8 +8,13 @@
 
     <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="12">
 
-        <Button Text="Scan"
-                Command="{Binding ScanCommand}" />
+        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+            <Button Text="Scan"
+                    Command="{Binding ScanCommand}" />
+            <Button Grid.Column="1"
+                    Text="Import Photo"
+                    Command="{Binding ImportCommand}" />
+        </Grid>
 
         <Label Grid.Row="1"
                Text="{Binding Status}"

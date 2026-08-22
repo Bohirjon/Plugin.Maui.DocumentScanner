@@ -17,11 +17,13 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public MainViewModel(IDocumentScanner scanner)
     {
         this.scanner = scanner;
-        ScanCommand = new Command(async () => await ScanAsync(), () => !busy);
+        ScanCommand = new Command(async () => await RunAsync(scanner.ScanAsync), () => !busy);
+        ImportCommand = new Command(async () => await RunAsync(scanner.ScanFromPhotosAsync), () => !busy);
     }
 
     public ObservableCollection<ScannedPage> Pages { get; } = [];
     public Command ScanCommand { get; }
+    public Command ImportCommand { get; }
 
     public string Status
     {
@@ -29,7 +31,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         set { status = value; OnPropertyChanged(); }
     }
 
-    async Task ScanAsync()
+    async Task RunAsync(Func<Task<IReadOnlyList<string>>> scan)
     {
         if (!scanner.IsSupported)
         {
@@ -39,11 +41,12 @@ public sealed class MainViewModel : INotifyPropertyChanged
 
         busy = true;
         ScanCommand.ChangeCanExecute();
+        ImportCommand.ChangeCanExecute();
         try
         {
             // Wall-clock includes first-run module download on Android
             var stopwatch = Stopwatch.StartNew();
-            var paths = await scanner.ScanAsync();
+            var paths = await scan();
             stopwatch.Stop();
 
             Pages.Clear();
@@ -66,6 +69,7 @@ public sealed class MainViewModel : INotifyPropertyChanged
         {
             busy = false;
             ScanCommand.ChangeCanExecute();
+            ImportCommand.ChangeCanExecute();
         }
     }
 
