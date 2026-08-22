@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:vm="clr-namespace:ScanTest.ViewModels"
+             x:Class="ScanTest.MainPage"
+             x:DataType="vm:MainViewModel"
+             Title="ScanTest">
+
+    <Grid RowDefinitions="Auto,Auto,*" Padding="16" RowSpacing="12">
+
+        <Button Text="Scan"
+                Command="{Binding ScanCommand}" />
+
+        <Label Grid.Row="1"
+               Text="{Binding Status}"
+               FontSize="13" />
+
+        <CollectionView Grid.Row="2"
+                        ItemsSource="{Binding Pages}">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="vm:ScannedPage">
+                    <VerticalStackLayout Padding="0,8" Spacing="4">
+                        <Image Source="{Binding Path}"
+                               Aspect="AspectFit"
+                               HeightRequest="320" />
+                        <Label Text="{Binding Info}"
+                               FontSize="12"
+                               HorizontalTextAlignment="Center" />
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+    </Grid>
+
+</ContentPage>
