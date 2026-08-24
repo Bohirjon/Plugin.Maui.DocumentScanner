@@ -3,7 +3,7 @@ using CoreGraphics;
 using Microsoft.Maui.ApplicationModel;
 using UIKit;
 
-namespace ScanTest.Services;
+namespace Plugin.Maui.DocumentScanner;
 
 // Lets the user adjust the detected document corners before cropping
 sealed class CornerEditorViewController : UIViewController

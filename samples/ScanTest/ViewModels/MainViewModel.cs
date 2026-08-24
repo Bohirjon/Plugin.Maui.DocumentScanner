@@ -2,7 +2,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using ScanTest.Services;
+using Plugin.Maui.DocumentScanner;
 
 namespace ScanTest.ViewModels;
 
@@ -17,8 +17,8 @@ public sealed class MainViewModel : INotifyPropertyChanged
     public MainViewModel(IDocumentScanner scanner)
     {
         this.scanner = scanner;
-        ScanCommand = new Command(async () => await RunAsync(scanner.ScanAsync), () => !busy);
-        ImportCommand = new Command(async () => await RunAsync(scanner.ScanFromPhotosAsync), () => !busy);
+        ScanCommand = new Command(async () => await RunAsync(() => scanner.ScanAsync()), () => !busy);
+        ImportCommand = new Command(async () => await RunAsync(() => scanner.ScanFromPhotosAsync()), () => !busy);
     }
 
     public ObservableCollection<ScannedPage> Pages { get; } = [];

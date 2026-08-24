@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Logging;
-using ScanTest.Services;
+using Plugin.Maui.DocumentScanner;
 using ScanTest.ViewModels;
 
 namespace ScanTest;
@@ -15,9 +15,9 @@ public static class MauiProgram
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
 				fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
-			});
+			})
+			.UseDocumentScanner();
 
-		builder.Services.AddSingleton<IDocumentScanner, DocumentScanner>();
 		builder.Services.AddSingleton<MainViewModel>();
 		builder.Services.AddSingleton<MainPage>();
 

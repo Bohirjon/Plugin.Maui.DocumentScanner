@@ -1,20 +1,17 @@
 using CoreGraphics;
 using CoreImage;
 using Foundation;
-using Microsoft.Maui.ApplicationModel;
-using Microsoft.Maui.Media;
-using Microsoft.Maui.Storage;
 using UIKit;
 using Vision;
 using VisionKit;
 
-namespace ScanTest.Services;
+namespace Plugin.Maui.DocumentScanner;
 
-public partial class DocumentScanner
+sealed class DocumentScannerImplementation : IDocumentScanner
 {
     public bool IsSupported => VNDocumentCameraViewController.Supported;
 
-    public async Task<IReadOnlyList<string>> ScanAsync()
+    public async Task<IReadOnlyList<string>> ScanAsync(DocumentScanOptions? options = null)
     {
         var host = Platform.GetCurrentUIViewController()
             ?? throw new InvalidOperationException("No view controller to present from.");
@@ -28,10 +25,10 @@ public partial class DocumentScanner
         return await tcs.Task;
     }
 
-    public async Task<IReadOnlyList<string>> ScanFromPhotosAsync()
+    public async Task<IReadOnlyList<string>> ScanFromPhotosAsync(DocumentScanOptions? options = null)
     {
-        // Matches the Android page limit
-        var photos = await MediaPicker.Default.PickPhotosAsync(new MediaPickerOptions { SelectionLimit = 5 });
+        var limit = (options ?? DocumentScanOptions.Default).PageLimit;
+        var photos = await MediaPicker.Default.PickPhotosAsync(new MediaPickerOptions { SelectionLimit = limit });
         if (photos is null || photos.Count == 0)
             return [];
 
@@ -103,11 +100,9 @@ public partial class DocumentScanner
     // Bakes EXIF orientation into the bitmap so CGImage matches what the user sees
     static UIImage NormalizeOrientation(UIImage image)
     {
-        UIGraphics.BeginImageContextWithOptions(image.Size, false, image.CurrentScale);
-        image.Draw(new CGRect(CGPoint.Empty, image.Size));
-        var normalized = UIGraphics.GetImageFromCurrentImageContext();
-        UIGraphics.EndImageContext();
-        return normalized ?? throw new InvalidOperationException("Could not normalize photo orientation.");
+        var format = new UIGraphicsImageRendererFormat { Opaque = false, Scale = image.CurrentScale };
+        using var renderer = new UIGraphicsImageRenderer(image.Size, format);
+        return renderer.CreateImage(_ => image.Draw(new CGRect(CGPoint.Empty, image.Size)));
     }
 
     sealed class ScanDelegate(TaskCompletionSource<IReadOnlyList<string>> tcs)

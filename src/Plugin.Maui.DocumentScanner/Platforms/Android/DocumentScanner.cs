@@ -2,13 +2,11 @@ using Android.Content;
 using Android.Gms.Common;
 using Android.Gms.Extensions;
 using Google.MLKit.Vision.Documentscanner;
-using Microsoft.Maui.ApplicationModel;
-using Microsoft.Maui.Storage;
 using Xamarin.Google.MLKit.Common;
 
-namespace ScanTest.Services;
+namespace Plugin.Maui.DocumentScanner;
 
-public partial class DocumentScanner
+sealed class DocumentScannerImplementation : IDocumentScanner
 {
     const int ScanRequestCode = 4711;
 
@@ -19,24 +17,26 @@ public partial class DocumentScanner
         !unsupportedReported
         && GoogleApiAvailability.Instance.IsGooglePlayServicesAvailable(Platform.AppContext) == ConnectionResult.Success;
 
-    public Task<IReadOnlyList<string>> ScanAsync() => LaunchAsync(galleryImport: false);
+    public Task<IReadOnlyList<string>> ScanAsync(DocumentScanOptions? options = null) =>
+        LaunchAsync(galleryImport: false, options ?? DocumentScanOptions.Default);
 
     // Same scanner UI plus an import-from-gallery button
-    public Task<IReadOnlyList<string>> ScanFromPhotosAsync() => LaunchAsync(galleryImport: true);
+    public Task<IReadOnlyList<string>> ScanFromPhotosAsync(DocumentScanOptions? options = null) =>
+        LaunchAsync(galleryImport: true, options ?? DocumentScanOptions.Default);
 
-    async Task<IReadOnlyList<string>> LaunchAsync(bool galleryImport)
+    static async Task<IReadOnlyList<string>> LaunchAsync(bool galleryImport, DocumentScanOptions options)
     {
         var activity = Platform.CurrentActivity
             ?? throw new InvalidOperationException("No current activity.");
 
-        var options = new GmsDocumentScannerOptions.Builder()
-            .SetPageLimit(5)
+        var scannerOptions = new GmsDocumentScannerOptions.Builder()
+            .SetPageLimit(options.PageLimit)
             .SetGalleryImportAllowed(galleryImport)
-            .SetScannerMode(GmsDocumentScannerOptions.ScannerModeFull)
-            .SetResultFormats(GmsDocumentScannerOptions.ResultFormatJpeg, [GmsDocumentScannerOptions.ResultFormatPdf])
+            .SetScannerMode(ToScannerMode(options.Mode))
+            .SetResultFormats(GmsDocumentScannerOptions.ResultFormatJpeg, [])
             .Build();
 
-        var scanner = GmsDocumentScanning.GetClient(options);
+        var scanner = GmsDocumentScanning.GetClient(scannerOptions);
         pending?.TrySetCanceled();
         var tcs = pending = new TaskCompletionSource<IReadOnlyList<string>>();
         try
@@ -58,8 +58,15 @@ public partial class DocumentScanner
         return await tcs.Task;
     }
 
-    // Called from MainActivity.OnActivityResult
-    public static void HandleActivityResult(int requestCode, Android.App.Result resultCode, Intent? data)
+    static int ToScannerMode(DocumentScannerMode mode) => mode switch
+    {
+        DocumentScannerMode.Base => GmsDocumentScannerOptions.ScannerModeBase,
+        DocumentScannerMode.BaseWithFilter => GmsDocumentScannerOptions.ScannerModeBaseWithFilter,
+        _ => GmsDocumentScannerOptions.ScannerModeFull,
+    };
+
+    // Wired to the activity-result lifecycle event by UseDocumentScanner
+    internal static void HandleActivityResult(int requestCode, Android.App.Result resultCode, Intent? data)
     {
         if (requestCode != ScanRequestCode || pending is null)
             return;

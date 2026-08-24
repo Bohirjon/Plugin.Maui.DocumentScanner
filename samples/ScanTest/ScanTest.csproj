@@ -66,8 +66,8 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
 	</ItemGroup>
 
-	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
-		<PackageReference Include="Xamarin.GooglePlayServices.MLKit.DocumentScanner" Version="116.0.0.3" />
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\Plugin.Maui.DocumentScanner\Plugin.Maui.DocumentScanner.csproj" />
 	</ItemGroup>
 
 </Project>
