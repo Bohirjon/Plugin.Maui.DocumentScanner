@@ -1,6 +1,12 @@
 # Plugin.Maui.DocumentScanner
 
+[![NuGet](https://img.shields.io/nuget/v/Plugin.Maui.DocumentScanner.svg)](https://www.nuget.org/packages/Plugin.Maui.DocumentScanner)
+
 Native document scanning for .NET MAUI — no paid SDK required.
+
+```
+dotnet add package Plugin.Maui.DocumentScanner
+```
 
 - **Android**: [ML Kit document scanner](https://developers.google.com/ml-kit/vision/doc-scanner) (full scanner UI, auto-crop, filters; models downloaded via Google Play services)
 - **iOS**: [VisionKit](https://developer.apple.com/documentation/visionkit) document camera for scanning, plus Vision document segmentation with a built-in corner editor for cropping already-taken photos
