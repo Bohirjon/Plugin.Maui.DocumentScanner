@@ -22,7 +22,7 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Install MAUI workloads
-        run: dotnet workload install android ios
+        run: dotnet workload install maui-android maui-ios
 
       - name: Install Android SDK
         run: >
