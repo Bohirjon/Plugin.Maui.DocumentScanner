@@ -28,12 +28,16 @@ sealed class CornerEditorViewController : UIViewController
     }
 
     // Returns adjusted normalized corners, or null on cancel
-    public static Task<CGPoint[]?> EditAsync(UIImage image, CGPoint[] detectedCorners) =>
+    public static Task<CGPoint[]?> EditAsync(UIImage image, CGPoint[] detectedCorners, CancellationToken cancellationToken) =>
         MainThread.InvokeOnMainThreadAsync(async () =>
         {
             var host = await GetStableHostAsync();
+            cancellationToken.ThrowIfCancellationRequested();
             var editor = new CornerEditorViewController(image, detectedCorners);
             await host.PresentViewControllerAsync(editor, true);
+            using var registration = cancellationToken.Register(() =>
+                MainThread.BeginInvokeOnMainThread(() =>
+                    editor.DismissViewController(true, () => editor.tcs.TrySetCanceled(cancellationToken))));
             return await editor.tcs.Task;
         });
 

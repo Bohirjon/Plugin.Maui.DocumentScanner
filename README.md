@@ -1,6 +1,7 @@
 # Plugin.Maui.DocumentScanner
 
 [![NuGet](https://img.shields.io/nuget/v/Plugin.Maui.DocumentScanner.svg)](https://www.nuget.org/packages/Plugin.Maui.DocumentScanner)
+[![CI](https://github.com/Bohirjon/Plugin.Maui.DocumentScanner/actions/workflows/ci.yml/badge.svg)](https://github.com/Bohirjon/Plugin.Maui.DocumentScanner/actions/workflows/ci.yml)
 
 Native document scanning for .NET MAUI — no paid SDK required.
 
@@ -15,7 +16,7 @@ Supports Android API 23+ (with Google Play services) and iOS 15+.
 
 ## Setup
 
-Install the package, then register it in `MauiProgram.cs`:
+Register the plugin in `MauiProgram.cs`:
 
 ```csharp
 builder
@@ -25,12 +26,27 @@ builder
 
 `UseDocumentScanner()` registers `IDocumentScanner` in dependency injection and hooks the Android activity-result plumbing — no `MainActivity` changes needed.
 
+### iOS: camera permission
+
+`ScanAsync` opens the camera, so add a usage description to `Platforms/iOS/Info.plist` — iOS terminates the app without it:
+
+```xml
+<key>NSCameraUsageDescription</key>
+<string>Scan documents with the camera.</string>
+```
+
+`ScanFromPhotosAsync` uses the system photo picker and needs no photo-library permission.
+
+### Android
+
+No permissions or manifest changes are required. ML Kit downloads its scanner module through Google Play services on first use, so the first scan on a device can take a few seconds longer.
+
 ## Usage
 
 Inject `IDocumentScanner` (or use `DocumentScanner.Default` without DI):
 
 ```csharp
-// Camera scan — returns file paths of cropped pages, empty list on cancel
+// Camera scan — returns file paths of cropped pages, empty list if the user cancels
 IReadOnlyList<string> pages = await scanner.ScanAsync();
 
 // Crop already-taken photos from the photo library
@@ -42,6 +58,10 @@ var pages = await scanner.ScanAsync(new DocumentScanOptions
     PageLimit = 3,
     Mode = DocumentScannerMode.Base, // Android only: Full, BaseWithFilter, or Base
 });
+
+// With cancellation — dismisses the native UI and throws OperationCanceledException
+using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+var pages = await scanner.ScanAsync(cancellationToken: cts.Token);
 ```
 
 Check `scanner.IsSupported` first; `ScanAsync` throws `NotSupportedException` on devices without a scanner implementation.
@@ -59,4 +79,8 @@ Returned files are JPEGs written to the app's cache directory — move or copy t
 
 ## Sample
 
-The [`samples/ScanTest`](samples/ScanTest) app exercises both scan paths and shows page sizes and timings.
+The [`samples/ScanTest`](samples/ScanTest) app exercises both scan paths and shows page sizes and timings. To deploy it to a physical iPhone, copy `ScanTest.local.props.example` to `ScanTest.local.props` and fill in your signing identity.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).

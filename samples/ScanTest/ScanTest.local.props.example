@@ -1,0 +1,11 @@
+<!-- Copy to ScanTest.local.props (git-ignored) to deploy to a physical iPhone -->
+<Project>
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<ApplicationId>com.yourcompany.yourapp</ApplicationId>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' And '$(RuntimeIdentifier)' == 'ios-arm64'">
+		<CodesignKey>Apple Development: Your Name (TEAMID)</CodesignKey>
+		<CodesignProvision>Your Provisioning Profile Name</CodesignProvision>
+	</PropertyGroup>
+</Project>

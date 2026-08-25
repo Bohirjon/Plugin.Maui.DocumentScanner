@@ -11,8 +11,9 @@ sealed class DocumentScannerImplementation : IDocumentScanner
 {
     public bool IsSupported => VNDocumentCameraViewController.Supported;
 
-    public async Task<IReadOnlyList<string>> ScanAsync(DocumentScanOptions? options = null)
+    public async Task<IReadOnlyList<string>> ScanAsync(DocumentScanOptions? options = null, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var host = Platform.GetCurrentUIViewController()
             ?? throw new InvalidOperationException("No view controller to present from.");
 
@@ -22,19 +23,25 @@ sealed class DocumentScannerImplementation : IDocumentScanner
             Delegate = new ScanDelegate(tcs),
         };
         await host.PresentViewControllerAsync(camera, true);
+        using var registration = cancellationToken.Register(() =>
+            MainThread.BeginInvokeOnMainThread(() =>
+                camera.DismissViewController(true, () => tcs.TrySetCanceled(cancellationToken))));
         return await tcs.Task;
     }
 
-    public async Task<IReadOnlyList<string>> ScanFromPhotosAsync(DocumentScanOptions? options = null)
+    public async Task<IReadOnlyList<string>> ScanFromPhotosAsync(DocumentScanOptions? options = null, CancellationToken cancellationToken = default)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var limit = (options ?? DocumentScanOptions.Default).PageLimit;
         var photos = await MediaPicker.Default.PickPhotosAsync(new MediaPickerOptions { SelectionLimit = limit });
+        cancellationToken.ThrowIfCancellationRequested();
         if (photos is null || photos.Count == 0)
             return [];
 
         var paths = new List<string>();
         foreach (var photo in photos)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             // PHPicker results are only readable through the stream API, not FullPath
             using var stream = await photo.OpenReadAsync();
             using var data = NSData.FromStream(stream)
@@ -43,11 +50,11 @@ sealed class DocumentScannerImplementation : IDocumentScanner
                 ?? throw new InvalidOperationException("Could not load the selected photo.");
             using var image = NormalizeOrientation(loaded);
 
-            var quad = await Task.Run(() => DetectQuad(image));
-            var corners = await CornerEditorViewController.EditAsync(image, quad);
+            var quad = await Task.Run(() => DetectQuad(image), cancellationToken);
+            var corners = await CornerEditorViewController.EditAsync(image, quad, cancellationToken);
             if (corners is null)
                 continue;
-            paths.Add(await Task.Run(() => SaveCorrected(image, corners)));
+            paths.Add(await Task.Run(() => SaveCorrected(image, corners), cancellationToken));
         }
         return paths;
     }

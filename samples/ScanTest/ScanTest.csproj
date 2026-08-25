@@ -23,8 +23,6 @@
 
 		<!-- App Identifier -->
 		<ApplicationId>com.companyname.scantest</ApplicationId>
-		<!-- Paradigm dev profile is explicit, so iOS must use its exact app ID -->
-		<ApplicationId Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">com.paragon.paradigmmobile</ApplicationId>
 
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
@@ -37,11 +35,8 @@
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">23.0</SupportedOSPlatformVersion>
 	</PropertyGroup>
 
-	<!-- Device signing with Paradigm's dev profile -->
-	<PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios' And '$(RuntimeIdentifier)' == 'ios-arm64'">
-		<CodesignKey>Apple Development: Bohirjon Akhmedov (R2MW47WJCC)</CodesignKey>
-		<CodesignProvision>Paradigm Mobile dev PP</CodesignProvision>
-	</PropertyGroup>
+	<!-- Personal signing/bundle ID overrides, git-ignored; see ScanTest.local.props.example -->
+	<Import Project="ScanTest.local.props" Condition="Exists('ScanTest.local.props')" />
 
 	<ItemGroup>
 		<!-- App Icon -->

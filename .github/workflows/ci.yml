@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install MAUI workloads
+        run: dotnet workload install maui-android maui-ios
+
+      - name: Install Android SDK
+        run: >
+          dotnet build src/Plugin.Maui.DocumentScanner/Plugin.Maui.DocumentScanner.csproj
+          -f net10.0-android -t:InstallAndroidDependencies
+          -p:AndroidSdkDirectory=$HOME/android-sdk -p:AcceptAndroidSDKLicenses=True
+
+      - name: Build library
+        run: >
+          dotnet build src/Plugin.Maui.DocumentScanner/Plugin.Maui.DocumentScanner.csproj
+          -c Release -p:AndroidSdkDirectory=$HOME/android-sdk
+
+      - name: Build sample (Android)
+        run: >
+          dotnet build samples/ScanTest/ScanTest.csproj -f net10.0-android
+          -c Release -p:AndroidSdkDirectory=$HOME/android-sdk
+
+      - name: Build sample (iOS simulator)
+        run: >
+          dotnet build samples/ScanTest/ScanTest.csproj -f net10.0-ios
+          -c Release -p:RuntimeIdentifier=iossimulator-arm64
+
+      - name: Pack
+        run: >
+          dotnet pack src/Plugin.Maui.DocumentScanner/Plugin.Maui.DocumentScanner.csproj
+          -c Release -o ./artifacts -p:AndroidSdkDirectory=$HOME/android-sdk -p:ContinuousIntegrationBuild=true

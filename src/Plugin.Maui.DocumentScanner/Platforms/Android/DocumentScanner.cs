@@ -17,15 +17,16 @@ sealed class DocumentScannerImplementation : IDocumentScanner
         !unsupportedReported
         && GoogleApiAvailability.Instance.IsGooglePlayServicesAvailable(Platform.AppContext) == ConnectionResult.Success;
 
-    public Task<IReadOnlyList<string>> ScanAsync(DocumentScanOptions? options = null) =>
-        LaunchAsync(galleryImport: false, options ?? DocumentScanOptions.Default);
+    public Task<IReadOnlyList<string>> ScanAsync(DocumentScanOptions? options = null, CancellationToken cancellationToken = default) =>
+        LaunchAsync(galleryImport: false, options ?? DocumentScanOptions.Default, cancellationToken);
 
     // Same scanner UI plus an import-from-gallery button
-    public Task<IReadOnlyList<string>> ScanFromPhotosAsync(DocumentScanOptions? options = null) =>
-        LaunchAsync(galleryImport: true, options ?? DocumentScanOptions.Default);
+    public Task<IReadOnlyList<string>> ScanFromPhotosAsync(DocumentScanOptions? options = null, CancellationToken cancellationToken = default) =>
+        LaunchAsync(galleryImport: true, options ?? DocumentScanOptions.Default, cancellationToken);
 
-    static async Task<IReadOnlyList<string>> LaunchAsync(bool galleryImport, DocumentScanOptions options)
+    static async Task<IReadOnlyList<string>> LaunchAsync(bool galleryImport, DocumentScanOptions options, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var activity = Platform.CurrentActivity
             ?? throw new InvalidOperationException("No current activity.");
 
@@ -55,6 +56,16 @@ sealed class DocumentScannerImplementation : IDocumentScanner
             pending = null;
             throw;
         }
+
+        using var registration = cancellationToken.Register(() =>
+        {
+            if (!ReferenceEquals(pending, tcs))
+                return;
+            // Cleared first so the scanner's RESULT_CANCELED is ignored
+            pending = null;
+            activity.RunOnUiThread(() => activity.FinishActivity(ScanRequestCode));
+            tcs.TrySetCanceled(cancellationToken);
+        });
         return await tcs.Task;
     }
 

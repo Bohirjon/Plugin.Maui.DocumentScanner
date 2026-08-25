@@ -45,7 +45,7 @@ jobs:
       - name: Pack
         run: >
           dotnet pack src/Plugin.Maui.DocumentScanner/Plugin.Maui.DocumentScanner.csproj
-          -c Release -o ./artifacts -p:AndroidSdkDirectory=$HOME/android-sdk
+          -c Release -o ./artifacts -p:AndroidSdkDirectory=$HOME/android-sdk -p:ContinuousIntegrationBuild=true
 
       - name: NuGet login (OIDC)
         id: login

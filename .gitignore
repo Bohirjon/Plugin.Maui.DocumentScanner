@@ -3,3 +3,5 @@ obj/
 .idea/
 *.user
 .DS_Store
+*.local.props
+artifacts/

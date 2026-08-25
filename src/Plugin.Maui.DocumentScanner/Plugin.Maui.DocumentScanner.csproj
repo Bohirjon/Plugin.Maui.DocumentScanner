@@ -13,20 +13,29 @@
 
 		<!-- NuGet package -->
 		<PackageId>Plugin.Maui.DocumentScanner</PackageId>
-		<Version>0.1.0</Version>
+		<Version>0.2.0</Version>
 		<Authors>Bohirjon Akhmedov</Authors>
 		<Description>Native document scanning for .NET MAUI: ML Kit document scanner on Android, VisionKit document camera and Vision-based photo cropping on iOS.</Description>
 		<PackageTags>maui;document;scanner;scan;mlkit;visionkit;camera;crop</PackageTags>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageIcon>icon.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/Bohirjon/Plugin.Maui.DocumentScanner</PackageProjectUrl>
+		<PackageReleaseNotes>https://github.com/Bohirjon/Plugin.Maui.DocumentScanner/blob/main/CHANGELOG.md</PackageReleaseNotes>
 		<RepositoryUrl>https://github.com/Bohirjon/Plugin.Maui.DocumentScanner</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+		<!-- Source Link + symbols -->
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<None Include="..\..\README.md" Pack="true" PackagePath="\" />
+		<None Include="..\..\assets\icon.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
 	<ItemGroup>
