@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 (unreleased)
+## 0.2.0 — 2026-09-07
 
 ### Changed
 - **Breaking:** `ScanFromPhotosAsync` is now iOS-only (`[SupportedOSPlatform("ios")]`) and throws `NotSupportedException` on Android — ML Kit cannot start in the gallery, so the Android flow just opened the camera and confused users; Android users reach the gallery through the import button inside `ScanAsync`'s scanner, now always enabled
