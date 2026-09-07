@@ -18,13 +18,15 @@ sealed class DocumentScannerImplementation : IDocumentScanner
         && GoogleApiAvailability.Instance.IsGooglePlayServicesAvailable(Platform.AppContext) == ConnectionResult.Success;
 
     public Task<IReadOnlyList<string>> ScanAsync(DocumentScanOptions? options = null, CancellationToken cancellationToken = default) =>
-        LaunchAsync(galleryImport: false, options ?? DocumentScanOptions.Default, cancellationToken);
+        LaunchAsync(options ?? DocumentScanOptions.Default, cancellationToken);
 
-    // Same scanner UI plus an import-from-gallery button
+    // ML Kit's scanner always starts on the camera, so there is no gallery-first flow on Android
     public Task<IReadOnlyList<string>> ScanFromPhotosAsync(DocumentScanOptions? options = null, CancellationToken cancellationToken = default) =>
-        LaunchAsync(galleryImport: true, options ?? DocumentScanOptions.Default, cancellationToken);
+        throw new NotSupportedException(
+            "ScanFromPhotosAsync is not available on Android: the ML Kit scanner cannot start in the gallery. "
+            + "Call ScanAsync instead — its scanner has an import-from-gallery button.");
 
-    static async Task<IReadOnlyList<string>> LaunchAsync(bool galleryImport, DocumentScanOptions options, CancellationToken cancellationToken)
+    static async Task<IReadOnlyList<string>> LaunchAsync(DocumentScanOptions options, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var activity = Platform.CurrentActivity
@@ -32,7 +34,7 @@ sealed class DocumentScannerImplementation : IDocumentScanner
 
         var scannerOptions = new GmsDocumentScannerOptions.Builder()
             .SetPageLimit(options.PageLimit)
-            .SetGalleryImportAllowed(galleryImport)
+            .SetGalleryImportAllowed(true)
             .SetScannerMode(ToScannerMode(options.Mode))
             .SetResultFormats(GmsDocumentScannerOptions.ResultFormatJpeg, [])
             .Build();

@@ -49,11 +49,13 @@ Inject `IDocumentScanner` (or use `DocumentScanner.Default` without DI):
 // Camera scan — returns file paths of cropped pages, empty list if the user cancels
 IReadOnlyList<string> pages = await scanner.ScanAsync();
 
-// Crop already-taken photos from the photo library
-IReadOnlyList<string> pages = await scanner.ScanFromPhotosAsync();
+// iOS only: pick already-taken photos, then adjust each crop in the corner editor.
+// On Android this throws NotSupportedException, so guard it.
+if (OperatingSystem.IsIOS())
+    pages = await scanner.ScanFromPhotosAsync();
 
 // With options
-var pages = await scanner.ScanAsync(new DocumentScanOptions
+pages = await scanner.ScanAsync(new DocumentScanOptions
 {
     PageLimit = 3,
     Mode = DocumentScannerMode.Base, // Android only: Full, BaseWithFilter, or Base
@@ -61,10 +63,10 @@ var pages = await scanner.ScanAsync(new DocumentScanOptions
 
 // With cancellation — dismisses the native UI and throws OperationCanceledException
 using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
-var pages = await scanner.ScanAsync(cancellationToken: cts.Token);
+pages = await scanner.ScanAsync(cancellationToken: cts.Token);
 ```
 
-Check `scanner.IsSupported` first; `ScanAsync` throws `NotSupportedException` on devices without a scanner implementation.
+Check `scanner.IsSupported` first. On Android `ScanAsync` throws `NotSupportedException` when ML Kit reports the device is unsupported (under ~1.7 GB RAM).
 
 Returned files are JPEGs written to the app's cache directory — move or copy them if you need them to persist.
 
@@ -72,9 +74,9 @@ Returned files are JPEGs written to the app's cache directory — move or copy t
 
 | | Android | iOS |
 |---|---|---|
-| `ScanAsync` | ML Kit scanner UI | VisionKit document camera |
-| `ScanFromPhotosAsync` | ML Kit scanner with gallery import | Photo picker + auto-detected corners + manual corner editor |
-| `PageLimit` | Applies to both methods | Photo import only (VisionKit has no limit) |
+| `ScanAsync` | ML Kit scanner UI, with an import-from-gallery button | VisionKit document camera |
+| `ScanFromPhotosAsync` | Not supported — ML Kit cannot start in the gallery, so the API throws `NotSupportedException` | Photo picker + auto-detected corners + manual corner editor |
+| `PageLimit` | Applies to the scanner | `ScanFromPhotosAsync` only (VisionKit has no limit) |
 | `Mode` | Full / BaseWithFilter / Base | Ignored |
 
 ## Sample

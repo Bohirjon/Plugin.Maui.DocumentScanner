@@ -18,12 +18,19 @@ public sealed class MainViewModel : INotifyPropertyChanged
     {
         this.scanner = scanner;
         ScanCommand = new Command(async () => await RunAsync(() => scanner.ScanAsync()), () => !busy);
-        ImportCommand = new Command(async () => await RunAsync(() => scanner.ScanFromPhotosAsync()), () => !busy);
+        ImportCommand = new Command(async () => await RunAsync(() =>
+        {
+            // OperatingSystem.IsIOS() is the platform guard the analyzer recognises
+            if (!OperatingSystem.IsIOS())
+                return Task.FromResult<IReadOnlyList<string>>([]);
+            return scanner.ScanFromPhotosAsync();
+        }), () => !busy);
     }
 
     public ObservableCollection<ScannedPage> Pages { get; } = [];
     public Command ScanCommand { get; }
     public Command ImportCommand { get; }
+    public bool CanImportPhotos => OperatingSystem.IsIOS();
 
     public string Status
     {
