@@ -12,7 +12,8 @@
             <Button Text="Scan"
                     Command="{Binding ScanCommand}" />
             <Button Grid.Column="1"
-                    Text="Import Photo"
+                    Text="Import Photos"
+                    IsVisible="{Binding CanImportPhotos}"
                     Command="{Binding ImportCommand}" />
         </Grid>
 
