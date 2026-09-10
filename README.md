@@ -12,7 +12,7 @@ dotnet add package Plugin.Maui.DocumentScanner
 - **Android**: [ML Kit document scanner](https://developers.google.com/ml-kit/vision/doc-scanner) (full scanner UI, auto-crop, filters; models downloaded via Google Play services)
 - **iOS**: [VisionKit](https://developer.apple.com/documentation/visionkit) document camera for scanning, plus Vision document segmentation with a built-in corner editor for cropping already-taken photos
 
-Supports Android API 23+ (with Google Play services) and iOS 15+.
+Supports Android API 23+ (Google Play services 23.39+, device RAM 1.7 GB+) and iOS 15+.
 
 ## Setup
 
@@ -66,7 +66,8 @@ using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
 pages = await scanner.ScanAsync(cancellationToken: cts.Token);
 ```
 
-Check `scanner.IsSupported` first. On Android `ScanAsync` throws `NotSupportedException` when ML Kit reports the device is unsupported (under ~1.7 GB RAM).
+Check `scanner.IsSupported` first — on Android it also verifies Google Play services is 23.39 or newer, which the scanner requires.
+If a device slips past it (too little RAM, under-spec hardware), `ScanAsync` throws `NotSupportedException`.
 
 Returned files are JPEGs written to the app's cache directory — move or copy them if you need them to persist.
 

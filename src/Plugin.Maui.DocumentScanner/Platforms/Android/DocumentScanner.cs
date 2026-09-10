@@ -10,12 +10,16 @@ sealed class DocumentScannerImplementation : IDocumentScanner
 {
     const int ScanRequestCode = 4711;
 
+    // Scanner needs newer GMS than the base client; below this GetStartScanIntent throws Unavailable
+    const int MinScannerGmsVersion = 233900000;
+
     static TaskCompletionSource<IReadOnlyList<string>>? pending;
     static bool unsupportedReported;
 
     public bool IsSupported =>
         !unsupportedReported
-        && GoogleApiAvailability.Instance.IsGooglePlayServicesAvailable(Platform.AppContext) == ConnectionResult.Success;
+        && GoogleApiAvailability.Instance.IsGooglePlayServicesAvailable(Platform.AppContext) == ConnectionResult.Success
+        && GoogleApiAvailability.Instance.GetApkVersion(Platform.AppContext) >= MinScannerGmsVersion;
 
     public Task<IReadOnlyList<string>> ScanAsync(DocumentScanOptions? options = null, CancellationToken cancellationToken = default) =>
         LaunchAsync(options ?? DocumentScanOptions.Default, cancellationToken);
@@ -47,8 +51,9 @@ sealed class DocumentScannerImplementation : IDocumentScanner
             var sender = await scanner.GetStartScanIntent(activity).AsAsync<IntentSender>();
             activity.StartIntentSenderForResult(sender, ScanRequestCode, null, 0, 0, 0);
         }
-        catch (MlKitException ex) when (ex.ErrorCode == MlKitException.Unsupported)
+        catch (MlKitException ex) when (ex.ErrorCode is MlKitException.Unavailable or MlKitException.Unsupported)
         {
+            // GMS too old or too little RAM — neither recovers on a retry
             unsupportedReported = true;
             pending = null;
             throw new NotSupportedException("Device does not support the ML Kit document scanner.", ex);
